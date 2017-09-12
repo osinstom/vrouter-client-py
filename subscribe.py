@@ -25,6 +25,9 @@ if xmpp.connect(host='127.0.0.1', port=5269, use_tls=False):
                         "xml:lang='en' " \
                         "xmlns='jabber:client' " \
                         "xmlns:stream='http://etherx.jabber.org/streams'>".format(ifrom, ito)
+
+    xmpp.stream_footer = "</stream:stream>"
+
     xmpp.process(block=True)
     print 'connected'
 
