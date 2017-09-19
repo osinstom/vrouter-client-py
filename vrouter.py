@@ -3,13 +3,12 @@ import time
 import xml.etree.ElementTree
 import logging
 
+logger = logging.getLogger(__name__)
 
 class VRouterMock(ClientXMPP):
 
     def __init__(self, jid, password):
         ClientXMPP.__init__(self, jid, password)
-
-        self.str = open('testdata/pubsub.xml', 'r').read()
 
         self.stream_header = "<stream:stream to='%s' %s %s %s %s %s>" % (
             self.boundjid.host,
@@ -43,7 +42,7 @@ class VRouterMock(ClientXMPP):
 
     def session_start(self, event):
         print 'Session started'
-        self.send_raw(self.str, now=True)
+        self.initial_subscribe()
         # self.send_presence()
         # self.get_roster()
 
@@ -60,6 +59,10 @@ class VRouterMock(ClientXMPP):
         #     logging.error('Server is taking too long to respond')
         #     self.disconnect()
 
+    def initial_subscribe(self):
+        subscribe_packet = open('testdata/pubsub_sub.xml', 'r').read()
+        self.send_raw(subscribe_packet, now=True)
+
     def message(self, msg):
         if msg['type'] in ('chat', 'normal'):
             msg.reply("Thanks for sending\n%(body)s" % msg).send()
@@ -75,6 +78,7 @@ if __name__ == '__main__':
 
     client = VRouterMock(jid='bgp.contrail.com', # JID of XMPP server
                          password='passwd')
+
     client.connect(('127.0.0.1', 5269), use_tls=False)
     client.process(block=True)
 
