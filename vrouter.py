@@ -43,6 +43,8 @@ class VRouterMock(ClientXMPP):
     def session_start(self, event):
         print 'Session started'
         self.initial_subscribe()
+        time.sleep(3)
+        self.publish_bgp_info()
         # self.send_presence()
         # self.get_roster()
 
@@ -62,6 +64,10 @@ class VRouterMock(ClientXMPP):
     def initial_subscribe(self):
         subscribe_packet = open('testdata/pubsub_sub.xml', 'r').read()
         self.send_raw(subscribe_packet, now=True)
+
+    def publish_bgp_info(self):
+        bgp_info = open('testdata/pubsub.xml', 'r').read()
+        self.send_raw(bgp_info, now=True)
 
     def message(self, msg):
         if msg['type'] in ('chat', 'normal'):
