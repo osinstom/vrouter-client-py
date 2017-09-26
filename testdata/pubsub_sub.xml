@@ -3,6 +3,6 @@
     to='bgp.contrail.com/other-peer' 
     id='sub1'>
     <pubsub xmlns='http://jabber.org/protocol/pubsub'>
-        <subscribe node='vrf-table-name'/>
+        <subscribe node='01020304abcd:vpn-ip-address/32'/>
     </pubsub>
 </iq>

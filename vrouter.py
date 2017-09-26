@@ -12,7 +12,7 @@ class VRouterMock(ClientXMPP):
 
         self.stream_header = "<stream:stream to='%s' %s %s %s %s %s>" % (
             self.boundjid.host,
-            "from='agent@vnsw.contrailsystems.com/other-peer'" ,
+            "from='agent@vnsw.contrailsystems.com'" ,
             "xmlns:stream='%s'" % self.stream_ns,
             "xmlns='%s'" % self.default_ns,
             "xml:lang='%s'" % self.default_lang,
@@ -70,6 +70,7 @@ class VRouterMock(ClientXMPP):
         self.send_raw(bgp_info, now=True)
 
     def message(self, msg):
+        logger.info("XMPP Message received!")
         if msg['type'] in ('chat', 'normal'):
             msg.reply("Thanks for sending\n%(body)s" % msg).send()
 
