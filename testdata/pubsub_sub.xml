@@ -1,5 +1,5 @@
 <iq type='set'
-    from='agent@vnsw.contrailsystems.com'
+    from='%fromjid%'
     to='bgp.contrail.com/other-peer' 
     id='sub1'>
     <pubsub xmlns='http://jabber.org/protocol/pubsub'>
