@@ -29,8 +29,8 @@ class XmppClient(ClientXMPP):
     def session_start(self, event):
         print 'Session started'
         self.initial_subscribe()
-        time.sleep(3)
-        self.publish_bgp_info()
+        time.sleep(5)
+        self.unsubscribe()
         # self.send_presence()
         # self.get_roster()
 
@@ -51,6 +51,10 @@ class XmppClient(ClientXMPP):
         subscribe_packet = open('testdata/pubsub_sub.xml', 'r').read()
         self.send_xmpp(subscribe_packet)
 
+    def unsubscribe(self):
+        unsubscribe_xml = open('testdata/unsubscribe.xml', 'r').read()
+        self.send_xmpp(unsubscribe_xml)
+
     def publish_bgp_info(self):
         bgp_info = open('testdata/pubsub.xml', 'r').read()
         self.send_xmpp(bgp_info)
@@ -59,6 +63,8 @@ class XmppClient(ClientXMPP):
         logger.info("XMPP Message received!")
         if msg['type'] in ('chat', 'normal'):
             msg.reply("Thanks for sending\n%(body)s" % msg).send()
+
+        self.publish_bgp_info()
 
     def send_xmpp(self, packet):
         packet = self.prepare_xml(packet)
