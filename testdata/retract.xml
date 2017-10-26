@@ -1,0 +1,10 @@
+<iq type='set'
+       from='%FROMJID%'
+       to='bgp.contrail.com'
+       id='request1'>
+    <pubsub xmlns='http://jabber.org/protocol/pubsub'>
+        <retract node="%NODEID%">
+             <item id="%ITEMID%" />
+        </retract>
+    </pubsub>
+</iq>

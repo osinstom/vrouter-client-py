@@ -1,8 +1,8 @@
 <iq type='set'
-    from='%fromjid%'
+    from='%FROMJID%'
     to='bgp.contrail.com/other-peer'
     id='sub1'>
     <pubsub xmlns='http://jabber.org/protocol/pubsub'>
-        <unsubscribe node='01020304abcd:vpn-ip-address/32'/>
+        <unsubscribe node='%NODEID%'/>
     </pubsub>
 </iq>
