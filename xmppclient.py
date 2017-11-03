@@ -1,14 +1,31 @@
-from sleekxmpp import ClientXMPP, XMLStream, Iq
+from sleekxmpp import ClientXMPP, XMLStream, Iq, StanzaPath, Callback
 import logging
+from xml.etree import cElementTree as ET
 import time
+import xml.dom.minidom
+
+from util import PubInfo, Observable
 
 logger = logging.getLogger(__name__)
 
-class XmppClient(ClientXMPP):
+FROM_JID_PATTERN = "%FROMJID%"
+TO_JID_PATTERN = "%TOJID%"
+NODE_PATTERN = "%NODEID%"
+ITEMID_PATTERN = "%ITEMID%"
+NLRI_PATTERN = "%NLRI%"
+NEXTHOP_PATTERN = "%NEXTHOP%"
+LABEL_PATTERN = "%LABEL%"
+ENCAPS_PATTERN = "%ENCAPS%"
+
+
+class XmppClient(ClientXMPP, Observable):
     def __init__(self, client_jid, server_jid, password):
         self.session_started = False
 
         ClientXMPP.__init__(self, server_jid, password)
+        Observable.__init__(self)
+
+        self.auto_reconnect = False
         self.client_jid = client_jid
         self.stream_header = "<stream:stream to='%s' %s %s %s %s %s>" % (
             self.boundjid.host,
@@ -22,8 +39,12 @@ class XmppClient(ClientXMPP):
         self.add_event_handler("session_start", self.session_start, threaded=True)
         self.add_event_handler("message", self.message)
 
-        self.jid_pattern = "%FROMJID%"
-        self.node_pattern = "%NODEID%"
+        self.register_handler(
+            Callback('message',
+                     StanzaPath('message'),
+                     lambda msg: self.event('message', msg)))
+
+
 
     def start_stream_handler(self, xml):
         self.event('session_start')
@@ -47,24 +68,71 @@ class XmppClient(ClientXMPP):
         self.send_xmpp(unsubscribe_xml)
 
     def prepare_subscribe_xml(self, packet, node):
-        packet = str(packet).replace(self.node_pattern, node)
+        packet = str(packet).replace(NODE_PATTERN, node)
         return packet
 
-    def publish_bgp_info(self):
-        bgp_info = open('testdata/pubsub.xml', 'r').read()
+    def publish(self, publish_to, publish_info):
+        bgp_info = open('testdata/publish.xml', 'r').read()
+        bgp_info = self.prepare_publish(bgp_info, publish_info, publish_to)
         self.send_xmpp(bgp_info)
 
     def message(self, msg):
         logger.info("XMPP Message received!")
-        if msg['type'] in ('chat', 'normal'):
-            msg.reply("Thanks for sending\n%(body)s" % msg).send()
+        payload = msg.get_payload()
+        xml = payload[0]
 
-        self.publish_bgp_info()
+        item = xml.find('.//items/item')
+        if item:
+            self.handle_event_notification(item)
+        else:
+            self.handle_retract_notification(xml)
+
+    def handle_event_notification(self, item):
+        elements = list(item.iter())
+
+        for el in elements:
+            if 'nlri' in str(el.tag):
+                nlri = el.text
+            if 'next-hop' in str(el.tag):
+                next_hop = el.text
+            if 'label' in str(el.tag):
+                label = el.text
+
+        self.fire(item_id=None, nlri=nlri, next_hop=next_hop, label=label, encapsulations=[])
+
+    def handle_retract_notification(self, xml):
+        items = xml.find('.//items')
+        node_id = items.get('node')
+        retract = xml.find('.//items/retract')
+        item_id = retract.get('id')
+        self.fire(item_id=item_id, node_id=node_id)
 
     def send_xmpp(self, packet):
         packet = self.prepare_xml(packet)
         self.send_raw(packet, now=True)
 
     def prepare_xml(self, packet):
-        packet = str(packet).replace(self.jid_pattern, self.client_jid)
+        packet = str(packet).replace(FROM_JID_PATTERN, self.client_jid)
         return packet
+
+    def prepare_publish(self, packet, info, node_id):
+        packet = str(packet).replace(NODE_PATTERN, node_id)
+        packet = str(packet).replace(ITEMID_PATTERN, info.item_id)
+        packet = str(packet).replace(NLRI_PATTERN, info.nlri)
+        packet = str(packet).replace(NEXTHOP_PATTERN, info.next_hop)
+        packet = str(packet).replace(LABEL_PATTERN, info.label)
+        tunnel_encaps_start = '<tunnel-encapsulation>'
+        tunnel_encaps_end = '</tunnel-encapsulation>'
+        encaps_data = ''
+        for e in info.encapsulations:
+            record = tunnel_encaps_start + e + tunnel_encaps_end
+            encaps_data += record + '\n'
+
+        packet = str(packet).replace(ENCAPS_PATTERN, encaps_data)
+        return packet
+
+    def retract(self, item_id, node_id):
+        retract_packet = open('testdata/retract.xml', 'r').read()
+        retract_packet = str(retract_packet).replace(ITEMID_PATTERN, item_id)
+        retract_packet = str(retract_packet).replace(NODE_PATTERN, node_id)
+        self.send_xmpp(retract_packet)
