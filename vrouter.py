@@ -2,8 +2,10 @@ from sleekxmpp import ClientXMPP, XMLStream, Iq
 import time
 import logging
 import argparse, sys, os
+import ConfigParser
 from util import PubInfo
 from xmppclient import XmppClient
+
 
 logger = logging.getLogger(__name__)
 
@@ -42,10 +44,10 @@ class Vee():
 
 class VRouterMock():
 
-    def __init__(self, client_jid, ip_address):
+    def __init__(self, client_jid, ip_address, controller_ip):
         self.xmpp_agent = XmppClient(client_jid=client_jid, server_jid='bgp.contrail.com', password='passwd')
         self.xmpp_agent.add_callback(self.notification_event)
-        self.xmpp_agent.connect(('127.0.0.1', 5269), use_tls=False, reattempt=False)
+        self.xmpp_agent.connect((controller_ip, 5269), use_tls=False, reattempt=False)
         self.xmpp_agent.process(block=False)
         self.ip_address = ip_address
         self.encapsulations = ['gre', 'udp']
@@ -165,16 +167,20 @@ if __name__ == '__main__':
                         format='%(levelname)-8s %(message)s')
     if not len(sys.argv) > 1:
         logger.error("Too few arguments")
-    jid = sys.argv[1]
-    vrouter_ip = sys.argv[2]
 
-    vrouter = VRouterMock(jid, vrouter_ip)
+    config = ConfigParser.RawConfigParser()
+    config.read('config.ini')
+    jid = config.get('general', 'jid')
+    vrouter_ip = config.get('general', 'vrouter.ip')
+    controller_ip = config.get('general', 'controller.ip')
+
+
+    vrouter = VRouterMock(jid, vrouter_ip, controller_ip)
 
     while not vrouter.xmpp_session_started():
         time.sleep(1)
 
     os.system('clear')
-
     while True:
         print ("""
                             Console of vRouter {}..
@@ -184,7 +190,6 @@ if __name__ == '__main__':
                             3.Enter VEE console
                             4.Delete VEE
                             5.Shutdown vRouter
-                            6.Exit/Quit console
                             """)
         option = raw_input("Choose action from list above..\n")
 
