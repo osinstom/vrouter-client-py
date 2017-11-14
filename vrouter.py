@@ -3,6 +3,8 @@ import time
 import logging
 import argparse, sys, os
 import ConfigParser
+
+from ovs import OVS
 from util import PubInfo
 from xmppclient import XmppClient
 
@@ -53,6 +55,9 @@ class VRouterMock():
         self.encapsulations = ['gre', 'udp']
         self.vee_list = []
         self.routing_table = []
+        networks = ['blue', 'red']
+        self.ovs = OVS(networks)
+
 
     def notification_event(self, info):
         if info.item_id:
@@ -63,6 +68,7 @@ class VRouterMock():
         else:
             entry = [info.nlri, info.next_hop, info.label]
             self.routing_table.append(entry)
+            self.ovs.addTunnelIntf(info.network, info.next_hop, info.label)
 
     def remove_entry_from_routing_table(self, nlri, next_hop):
         for entry in self.routing_table:
@@ -95,6 +101,7 @@ class VRouterMock():
 
     def attach_vee(self, vee):
         self.wait_for_session_started()
+        self.ovs.addHost(vee.identifier, vee.ip_address, vee.network)
         if not self.is_already_subscribed(vee.network):
             self.xmpp_agent.initial_subscribe(vee.network)
         pub_info = self.get_publish_info(vee)
@@ -116,6 +123,9 @@ class VRouterMock():
         for i in range(0, len(self.vee_list)):
             vee = self.vee_list[i]
             vee.info()
+
+    def ovs_cli(self):
+        self.ovs.cli()
 
     def enter_vee(self):
         identifier = raw_input("Type identifier of VEE..\n")
@@ -146,6 +156,7 @@ class VRouterMock():
         logger.info("Shutting vRouter down..")
         self.detach_all_vee()
         self.xmpp_agent.disconnect()
+        self.ovs.stop()
 
     def get_publish_info(self, vee):
         nlri = vee.ip_address
@@ -196,11 +207,13 @@ if __name__ == '__main__':
         if option == "1":
             identifier = raw_input("Type identifier of new VEE..\n")
             network = raw_input("Type a network the VEE should be attached to..\n")
-            vrouter.create_vee(identifier=identifier, network=network)
+            address = raw_input("Type an IP address of VEE\n")
+            vrouter.create_vee(identifier=identifier, network=network, ip_addr=address)
         elif option == "2":
             vrouter.list_vee()
         elif option == "3":
-            vrouter.enter_vee()
+            #vrouter.enter_vee()
+            vrouter.ovs_cli()
         elif option == "4":
             vrouter.delete_vee()
         elif option == "5":

@@ -80,14 +80,18 @@ class XmppClient(ClientXMPP, Observable):
         logger.info("XMPP Message received!")
         payload = msg.get_payload()
         xml = payload[0]
-
+        items = xml.find('.//items')
+        elements = list(items.iter())
+        for el in elements:
+            if 'node' in str(el.tag):
+                node = el.text
         item = xml.find('.//items/item')
         if item:
-            self.handle_event_notification(item)
+            self.handle_event_notification(item, node)
         else:
             self.handle_retract_notification(xml)
 
-    def handle_event_notification(self, item):
+    def handle_event_notification(self, item, node):
         elements = list(item.iter())
 
         for el in elements:
@@ -98,7 +102,7 @@ class XmppClient(ClientXMPP, Observable):
             if 'label' in str(el.tag):
                 label = el.text
 
-        self.fire(item_id=None, nlri=nlri, next_hop=next_hop, label=label, encapsulations=[])
+        self.fire(item_id=None, nlri=nlri, next_hop=next_hop, label=label, encapsulations=[], network=node)
 
     def handle_retract_notification(self, xml):
         items = xml.find('.//items')
