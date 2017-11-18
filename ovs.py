@@ -47,7 +47,7 @@ class OVS():
 
         vxlan_port_id = '{}-vxlan{}-{}'.format(sw.name, str(ovs_binding.get_vxlan_ports_number(sw) + 1), label)
 
-        if not vxlan_port_id in ovs_binding.get_vxlan_ports(sw):
+        if not ovs_binding.is_vxlan_port_already_created(sw):
             vxlan_port = len(ovs_binding.get_ports(sw)) + ovs_binding.PORT_OFFSET
             output = sw.cmd(
                 'ovs-vsctl add-port {} {} -- set interface {} type=vxlan options:key={} options:remote_ip={} ofport_request={}'.format(

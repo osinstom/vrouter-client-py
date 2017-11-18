@@ -27,3 +27,12 @@ def get_vxlan_port_number(sw, vxlan_port_id):
     all_ports = get_ports(sw)
     port_number = all_ports.index(vxlan_port_id) + PORT_OFFSET
     return port_number
+
+
+def is_vxlan_port_already_created(sw, next_hop_ip):
+    output = sw.cmdPrint('ovs-vsctl show')
+    print output
+    if next_hop_ip in output:
+        print "Returning true"
+        return True
+    return False
