@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-
+# port offset, OVS starts numbering ports from 2, so the 0 index will be port number 2
+PORT_OFFSET = 2
 
 def get_ports(switch):
     output = switch.cmd("ovs-vsctl list-ports {}".format(switch.name))
@@ -24,5 +25,5 @@ def get_vxlan_ports(sw):
 
 def get_vxlan_port_number(sw, vxlan_port_id):
     all_ports = get_ports(sw)
-    port_number = all_ports.index(vxlan_port_id)
+    port_number = all_ports.index(vxlan_port_id) + PORT_OFFSET
     return port_number

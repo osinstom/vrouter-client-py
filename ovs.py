@@ -45,10 +45,10 @@ class OVS():
     def addTunnelIntf(self, network, next_hop, label, dst_ip):
         sw = self.nw_sw[network]
 
-        vxlan_port_id = sw.name + '-vxlan' + (ovs_binding.get_vxlan_ports_number(sw) + 1) + '-' + label
+        vxlan_port_id = '{}-vxlan{}-{}'.format(sw.name, str(ovs_binding.get_vxlan_ports_number(sw) + 1), label)
 
         if not vxlan_port_id in ovs_binding.get_vxlan_ports(sw):
-            vxlan_port = len(ovs_binding.get_ports(sw)) + 1
+            vxlan_port = len(ovs_binding.get_ports(sw)) + ovs_binding.PORT_OFFSET
             output = sw.cmd(
                 'ovs-vsctl add-port {} {} -- set interface {} type=vxlan options:key={} options:remote_ip={} ofport_request={}'.format(
                     sw.name, vxlan_port_id, vxlan_port_id,  label, next_hop, vxlan_port))
