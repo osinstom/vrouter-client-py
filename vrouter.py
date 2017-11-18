@@ -196,26 +196,26 @@ if __name__ == '__main__':
         print ("""
                             Console of vRouter {}..
 
-                            1.Create a new VEE
-                            2.List already connected VEE
-                            3.Enter VEE console
-                            4.Delete VEE
+                            1.Create a new VM
+                            2.List already connected VM
+                            3.Enter VM console
+                            4.Delete VM
                             5.Shutdown vRouter
                             """)
         option = raw_input("Choose action from list above..\n")
 
         if option == "1":
-            identifier = raw_input("Type identifier of new VEE..\n")
-            network = raw_input("Type a network the VEE should be attached to..\n")
-            address = raw_input("Type an IP address of VEE\n")
+            identifier = raw_input("Type identifier of new VM..\n")
+            network = raw_input("Type a network the VM should be attached to..\n")
+            address = raw_input("Type an IP address of VM\n")
             vrouter.create_vee(identifier=identifier, network=network, ip_addr=address)
         elif option == "2":
             vrouter.list_vee()
         elif option == "3":
-            #vrouter.enter_vee()
             vrouter.ovs_cli()
         elif option == "4":
-            vrouter.delete_vee()
+            identifier = raw_input("Type identifier of VM to delete..\n")
+            vrouter.delete_vee(identifier)
         elif option == "5":
             vrouter.shutdown()
             break
