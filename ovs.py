@@ -5,6 +5,7 @@ from mininet.net import Mininet
 from mininet.node import Controller, RemoteController
 from mininet.cli import CLI
 from mininet.log import setLogLevel, info
+import ovs_binding
 
 setLogLevel( 'info' )
 
@@ -42,15 +43,15 @@ class OVS():
         sw.attach(link.intf2)
 
     def addTunnelIntf(self, network, next_hop, label, dst_ip):
-        logger.info("Networks: " + str(self.nw_sw))
-        logger.info("Network: " + str(network))
         sw = self.nw_sw[network]
-        print sw
+        ovs_binding.get_ports(sw)
+
         vxlan_port = 45
         output = sw.cmd(
             'ovs-vsctl add-port {} {}-gre{} -- set interface {}-gre{} type=vxlan options:key={} options:remote_ip={} ofport_request={}'.format(
                 sw.name, sw.name, label, sw.name,  label, label, next_hop, vxlan_port))
         print output
+
         sw.cmd(
             'sudo ovs-ofctl add-flow {} ip,nw_dst={},actions=output:{}'.format(sw.name, dst_ip, vxlan_port)
         )
