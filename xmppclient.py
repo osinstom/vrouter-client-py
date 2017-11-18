@@ -80,12 +80,8 @@ class XmppClient(ClientXMPP, Observable):
         logger.info("XMPP Message received!")
         payload = msg.get_payload()
         xml = payload[0]
-        items = xml.find('.//items')
-        elements = list(items.iter())
-        node = None
-        for el in elements:
-            if 'node' in str(el.tag):
-                node = el.text
+
+        node = xml.find('./items').attrib['node']
         item = xml.find('.//items/item')
 
         if item:
