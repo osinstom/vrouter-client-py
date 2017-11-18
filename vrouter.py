@@ -68,7 +68,7 @@ class VRouterMock():
         else:
             entry = [info.nlri, info.next_hop, info.label]
             self.routing_table.append(entry)
-            self.ovs.addTunnelIntf(info.network, info.next_hop, info.label)
+            self.ovs.addTunnelIntf(info.network, info.next_hop, info.label, info.nlri)
 
     def remove_entry_from_routing_table(self, nlri, next_hop):
         for entry in self.routing_table:
@@ -143,7 +143,7 @@ class VRouterMock():
     def detach_all_vee(self):
         for i in range(0, len(self.vee_list)):
             vee = self.vee_list[i]
-            vee.detach()
+            self.detach_vee(vee)
 
 
     def get_vee(self, identifier):

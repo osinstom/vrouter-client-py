@@ -1,11 +1,14 @@
 #!/usr/bin/python
 
+import logging
 from mininet.net import Mininet
 from mininet.node import Controller, RemoteController
 from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 
 setLogLevel( 'info' )
+
+logger = logging.getLogger(__name__)
 
 class OVS():
 
@@ -20,6 +23,7 @@ class OVS():
 
         for idx, nw in enumerate(networks):
             sw = net.addSwitch('s' + str(idx+1))
+            sw.cmd('sudo ovs-ofctl add-flow {} arp,actions=flood'.format(sw.name))
             self.nw_sw[nw] = sw
 
         net.start()
@@ -27,17 +31,26 @@ class OVS():
         return net
 
     def addHost(self, name, ip, network):
-        h = self.ovs.addHost(name, ip=ip)
-        sw = self.nw_sw[network]
-        self.ovs.addLink(h, sw)
+        h = self.ovs.addHost(name)
 
-    def addTunnelIntf(self, network, next_hop, label):
+        sw = self.nw_sw[network]
+        link = self.ovs.addLink(h, sw)
+        h.cmd('ifconfig {} {} up'.format(link.intf1, ip))
+        sw.attach(link.intf2)
+
+    def addTunnelIntf(self, network, next_hop, label, dst_ip):
+        logger.info("Networks: " + str(self.nw_sw))
+        logger.info("Network: " + str(network))
         sw = self.nw_sw[network]
         print sw
+        vxlan_port = 45
         output = sw.cmd(
-            'ovs-vsctl add-port {} {}-gre{} -- set interface {}-gre{} type=vxlan options:key={} options:remote_ip={}'.format(
-                sw.name, sw.name, label, sw.name,  label, label, next_hop))
+            'ovs-vsctl add-port {} {}-gre{} -- set interface {}-gre{} type=vxlan options:key={} options:remote_ip={} ofport_request={}'.format(
+                sw.name, sw.name, label, sw.name,  label, label, next_hop, vxlan_port))
         print output
+        sw.cmd(
+            'sudo ovs-ofctl add-flow {} ip,nw_dst={},actions=output:{}'.format(sw.name, dst_ip, vxlan_port)
+        )
         sw.cmdPrint('ovs-vsctl show')
 
     def stop(self):
