@@ -44,14 +44,18 @@ class OVS():
 
     def addTunnelIntf(self, network, next_hop, label, dst_ip):
         sw = self.nw_sw[network]
-        ovs_binding.get_ports(sw)
 
-        vxlan_port = 45
-        output = sw.cmd(
-            'ovs-vsctl add-port {} {}-gre{} -- set interface {}-gre{} type=vxlan options:key={} options:remote_ip={} ofport_request={}'.format(
-                sw.name, sw.name, label, sw.name,  label, label, next_hop, vxlan_port))
-        print output
+        vxlan_port_id = sw.name + '-vxlan' + (ovs_binding.get_vxlan_ports_number(sw) + 1) + '-' + label
 
+        if not vxlan_port_id in ovs_binding.get_vxlan_ports(sw):
+            vxlan_port = len(ovs_binding.get_ports(sw)) + 1
+            output = sw.cmd(
+                'ovs-vsctl add-port {} {} -- set interface {} type=vxlan options:key={} options:remote_ip={} ofport_request={}'.format(
+                    sw.name, vxlan_port_id, vxlan_port_id,  label, next_hop, vxlan_port))
+            print output
+
+        if not vxlan_port:
+            vxlan_port = ovs_binding.get_vxlan_port_number(sw, vxlan_port_id)
         sw.cmd(
             'sudo ovs-ofctl add-flow {} ip,nw_dst={},actions=output:{}'.format(sw.name, dst_ip, vxlan_port)
         )
