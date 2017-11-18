@@ -23,10 +23,13 @@ class OVS():
 
         for idx, nw in enumerate(networks):
             sw = net.addSwitch('s' + str(idx+1))
-            sw.cmd('sudo ovs-ofctl add-flow {} arp,actions=flood'.format(sw.name))
             self.nw_sw[nw] = sw
 
         net.start()
+
+        for switch in self.nw_sw.values():
+            switch.cmd('ovs-ofctl add-flow {} arp,actions=flood'.format(switch.name))
+            switch.cmd('ovs-ofctl add-flow {} ip,actions=flood'.format(switch.name))
 
         return net
 
