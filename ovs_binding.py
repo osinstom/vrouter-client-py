@@ -3,6 +3,19 @@
 # port offset, OVS starts numbering ports from 2, so the 0 index will be port number 2
 PORT_OFFSET = 2
 
+class OvsIntf():
+    def __init__(self, number, name, options):
+        self.number = number
+        self.name = name
+        self.options = options
+
+def get_interfaces(switch):
+    output = switch.cmd("ovs-vsctl --columns=name,ofport,options list Interface")
+    print output.split('\n')
+    output1 = switch.cmd("ovs-vsctl --columns=name,ofport,options --format=table list Interface")
+    print output1.split('\n')
+
+
 def get_ports(switch):
     output = switch.cmd("ovs-vsctl list-ports {}".format(switch.name))
     output = output.replace('\r', '')
@@ -30,9 +43,34 @@ def get_vxlan_port_number(sw, vxlan_port_id):
 
 
 def is_vxlan_port_already_created(sw, next_hop_ip):
-    output = sw.cmdPrint('ovs-vsctl show')
-    print output
-    if next_hop_ip in output:
-        print "Returning true"
-        return True
+    intfs = get_interfaces(sw)
+    for intf in intfs:
+        if next_hop_ip in intf.options:
+            return True
     return False
+
+
+def get_port_number_name_records(sw):
+    output = sw.cmdPrint('ovs-ofctl show {}'.format(sw.name))
+    records = dict()
+    for line in output.split('\n'):
+        if '(' in line and ')' in line and 'addr' in line:
+            if not 'LOCAL' in line:
+                splitted = line.split(': addr:')
+            number, name = get_port_number_name_record(splitted[0])
+            records[number] = name
+
+    print str(records)
+    return records
+
+
+def get_port_number_name_record(param):
+    splitted = param.split('(')
+    number = splitted[0]
+    name = splitted[1].replace(')', '')
+    return number, name
+
+
+def get_vxlan_port_name_for_nexthop(sw, next_hop):
+
+    return None

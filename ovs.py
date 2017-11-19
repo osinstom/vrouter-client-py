@@ -45,17 +45,18 @@ class OVS():
     def addTunnelIntf(self, network, next_hop, label, dst_ip):
         sw = self.nw_sw[network]
 
-        vxlan_port_id = '{}-vxlan{}-{}'.format(sw.name, str(ovs_binding.get_vxlan_ports_number(sw) + 1), label)
+        ovs_binding.get_interfaces(sw)
 
-        if not ovs_binding.is_vxlan_port_already_created(sw):
+        if not ovs_binding.is_vxlan_port_already_created(sw, next_hop):
             vxlan_port = len(ovs_binding.get_ports(sw)) + ovs_binding.PORT_OFFSET
+            vxlan_port_id = '{}-vxlan{}-{}'.format(sw.name, str(ovs_binding.get_vxlan_ports_number(sw) + 1), label)
             output = sw.cmd(
                 'ovs-vsctl add-port {} {} -- set interface {} type=vxlan options:key={} options:remote_ip={} ofport_request={}'.format(
                     sw.name, vxlan_port_id, vxlan_port_id,  label, next_hop, vxlan_port))
             print output
 
-        if not vxlan_port:
-            vxlan_port = ovs_binding.get_vxlan_port_number(sw, vxlan_port_id)
+        ovs_binding.get_vxlan_port_name_for_nexthop(sw, next_hop)
+        vxlan_port = ovs_binding.get_vxlan_port_number(sw, vxlan_port_id)
         sw.cmd(
             'sudo ovs-ofctl add-flow {} ip,nw_dst={},actions=output:{}'.format(sw.name, dst_ip, vxlan_port)
         )
