@@ -10,11 +10,17 @@ class OvsIntf():
         self.options = options
 
 def get_interfaces(switch):
-    output = switch.cmd("ovs-vsctl --columns=name,ofport,options list Interface")
+    intfs = []
+    output = switch.cmd("ovs-vsctl --columns=name,ofport,options --format=table list Interface")
     print output.split('\n')
-    output1 = switch.cmd("ovs-vsctl --columns=name,ofport,options --format=table list Interface")
-    print output1.split('\n')
+    lines = [x for x in output.split('\n') if switch.name in x]
+    for line in lines:
+        options = line[line.find('{')+1:line.find('}')]
+        splitted_line = line.split()
+        intf = OvsIntf(number=splitted_line[1], name=splitted_line[0], options=options)
+        intfs.append(intf)
 
+    return intfs
 
 def get_ports(switch):
     output = switch.cmd("ovs-vsctl list-ports {}".format(switch.name))
@@ -42,10 +48,10 @@ def get_vxlan_port_number(sw, vxlan_port_id):
     return port_number
 
 
-def is_vxlan_port_already_created(sw, next_hop_ip):
+def is_vxlan_port_already_created(sw, next_hop_ip, label):
     intfs = get_interfaces(sw)
     for intf in intfs:
-        if next_hop_ip in intf.options:
+        if next_hop_ip in intf.options and label in intf.options:
             return True
     return False
 
@@ -71,6 +77,8 @@ def get_port_number_name_record(param):
     return number, name
 
 
-def get_vxlan_port_name_for_nexthop(sw, next_hop):
-
-    return None
+def get_vxlan_port_name_for_nexthop(sw, next_hop, label):
+    intfs = get_interfaces(sw)
+    for intf in intfs:
+        if next_hop in intf.options and label in intf.options:
+            return intf.number
