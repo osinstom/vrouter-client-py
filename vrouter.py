@@ -56,6 +56,7 @@ class VRouterMock():
         self.vee_list = []
         self.routing_table = []
         networks = ['blue', 'red']
+        self.network_labels = {'blue' : '10', 'red' : '20'}
         self.ovs = OVS(networks)
 
 
@@ -160,7 +161,7 @@ class VRouterMock():
 
     def get_publish_info(self, vee):
         nlri = vee.ip_address
-        label = len(self.vee_list) + 10
+        label = self.network_labels[vee.network]
         item_id = nlri + ":1:" + self.ip_address
         publish_info = PubInfo(item_id, nlri, str(label), self.ip_address, self.encapsulations)
         return publish_info
