@@ -55,9 +55,9 @@ class VRouterMock():
         self.encapsulations = ['gre', 'udp']
         self.vee_list = []
         self.routing_table = []
-        networks = ['blue', 'red']
+        self.networks = ['blue', 'red']
         self.network_labels = {'blue' : '10', 'red' : '20'}
-        self.ovs = OVS(networks)
+        self.ovs = OVS(self.networks)
 
 
     def notification_event(self, info):
@@ -90,11 +90,16 @@ class VRouterMock():
         return self.xmpp_agent.session_started
 
     def create_vee(self, identifier, network, ip_addr):
+        if self.validate_create_params(identifier, network, ip_addr):
+            logger.info("Creating new Virtual Execution Environment..")
+            vee = Vee(identifier, network, ip_addr)
+            self.attach_vee(vee)
+            self.vee_list.append(vee)
 
-        logger.info("Creating new Virtual Execution Environment..")
-        vee = Vee(identifier, network, ip_addr)
-        self.attach_vee(vee)
-        self.vee_list.append(vee)
+    def validate_create_params(self, identifier, network, ip_addr):
+        if network in self.networks:
+            return False
+        return True
 
     def wait_for_session_started(self):
         while not self.xmpp_session_started():
@@ -138,8 +143,9 @@ class VRouterMock():
 
     def delete_vee(self, identifier):
         vee = self.get_vee(identifier)
-        self.vee_list.remove(vee)
-        self.detach_vee(vee)
+        if vee in self.vee_list:
+            self.vee_list.remove(vee)
+            self.detach_vee(vee)
 
     def detach_all_vee(self):
         for i in range(0, len(self.vee_list)):
@@ -173,6 +179,8 @@ class VRouterMock():
         return False
 
 
+
+
 if __name__ == '__main__':
 
     logging.basicConfig(level=logging.DEBUG,
@@ -202,6 +210,7 @@ if __name__ == '__main__':
                             3.Enter VM console
                             4.Delete VM
                             5.Shutdown vRouter
+                            6.Dump routing table
                             """)
         option = raw_input("Choose action from list above..\n")
 
@@ -220,6 +229,8 @@ if __name__ == '__main__':
         elif option == "5":
             vrouter.shutdown()
             break
+        elif option == "6":
+            vrouter.print_routing_table()
 
 
 
