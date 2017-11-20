@@ -83,8 +83,8 @@ class VRouterMock():
 
     def validate_create_params(self, identifier, network, ip_addr):
         if network in self.networks:
-            return False
-        return True
+            return True
+        return False
 
     def wait_for_session_started(self):
         while not self.xmpp_session_started():
