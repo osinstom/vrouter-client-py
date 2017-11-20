@@ -48,20 +48,20 @@ class VRouterMock():
             parts = info.item_id.split(':')
             nlri = parts[0]
             next_hop = parts[2]
-            self.remove_entry_from_routing_table(nlri=nlri, next_hop=next_hop)
+            self.remove_entry_from_routing_table(nlri=nlri, next_hop=next_hop, network=info.node_id)
         else:
             entry = [info.nlri, info.next_hop, info.label]
             self.routing_table.append(entry)
             self.ovs.addTunnelIntf(info.network, info.next_hop, info.label, info.nlri)
 
-    def remove_entry_from_routing_table(self, nlri, next_hop):
+    def remove_entry_from_routing_table(self, nlri, next_hop, network):
         for entry in self.routing_table:
             if entry[0] == nlri and entry[1] == next_hop:
                 entry_to_remove = entry
 
         self.routing_table.remove(entry_to_remove)
-        vee = self.get_vee_by_ipaddr(nlri)
-        self.ovs.remove_routing_flow(nlri, next_hop, vee.network)
+
+        self.ovs.remove_routing_flow(nlri, next_hop, network)
 
     def print_routing_table(self):
         content = '\n\n####\t'+ self.xmpp_agent.client_jid + '\t####'
@@ -77,7 +77,7 @@ class VRouterMock():
     def create_vee(self, identifier, network, ip_addr):
         if self.validate_create_params(identifier, network, ip_addr):
             logger.info("Creating new Virtual Execution Environment..")
-            vee = Vee(identifier, network, ip_addr)
+            vee = Vee(identifier=identifier, network=network, ip_addr=ip_addr)
             self.attach_vee(vee)
             self.vee_list.append(vee)
 
@@ -135,12 +135,6 @@ class VRouterMock():
         for i in range(0, len(self.vee_list)):
             vee = self.vee_list[i]
             if vee.identifier == identifier:
-                return vee
-
-    def get_vee_by_ipaddr(self, ip_addr):
-        for i in range(0, len(self.vee_list)):
-            vee = self.vee_list[i]
-            if vee.ip_address == ip_addr:
                 return vee
 
     def shutdown(self):
