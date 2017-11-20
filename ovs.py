@@ -67,3 +67,7 @@ class OVS():
 
     def cli(self):
         CLI(self.ovs)
+
+    def remove_routing_flow(self, ip_address, next_hop, network):
+        sw = self.nw_sw[network]
+        sw.cmd('ovs-ofctl del-flows {} "ip,nw_dst={}"'.format(sw.name, ip_address))

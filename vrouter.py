@@ -22,27 +22,10 @@ class Vee():
         self.network = network
         self.ip_address = ip_addr
         self.attached = False
-        self.operations = ['ping']
 
     def info(self):
         print "ID={}, ATTACHED={}, NETWORK={}".format(self.identifier, self.attached, self.network)
 
-    def console(self):
-        os.system('clear')
-        while True:
-            print ("""
-                ### {} VEE Command Line Interface ###
-                ### List of operations: {} ###
-                ### Type '0' to exit console. ###
-            """).format(self.identifier, self.operations)
-            action = raw_input("""Choose operation to invoke.\n""")
-            if action == '0':
-                break
-            elif action == 'ping':
-                self.ping()
-
-    def ping(self):
-        print "Pinging ... "
 
 class VRouterMock():
 
@@ -77,6 +60,8 @@ class VRouterMock():
                 entry_to_remove = entry
 
         self.routing_table.remove(entry_to_remove)
+        vee = self.get_vee_by_ipaddr(nlri)
+        self.ovs.remove_routing_flow(nlri, next_hop, vee.network)
 
     def print_routing_table(self):
         content = '\n\n####\t'+ self.xmpp_agent.client_jid + '\t####'
@@ -133,13 +118,6 @@ class VRouterMock():
     def ovs_cli(self):
         self.ovs.cli()
 
-    def enter_vee(self):
-        identifier = raw_input("Type identifier of VEE..\n")
-        vee = self.get_vee(identifier)
-        if vee:
-            vee.console()
-        else:
-            logger.warn("No VEE with specified identifier!")
 
     def delete_vee(self, identifier):
         vee = self.get_vee(identifier)
@@ -157,6 +135,12 @@ class VRouterMock():
         for i in range(0, len(self.vee_list)):
             vee = self.vee_list[i]
             if vee.identifier == identifier:
+                return vee
+
+    def get_vee_by_ipaddr(self, ip_addr):
+        for i in range(0, len(self.vee_list)):
+            vee = self.vee_list[i]
+            if vee.ip_address == ip_addr:
                 return vee
 
     def shutdown(self):
