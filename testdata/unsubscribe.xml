@@ -1,6 +1,6 @@
 <iq type='set'
     from='%FROMJID%'
-    to='bgp.contrail.com/other-peer'
+    to='xmpp.onosproject.org/other-peer'
     id='sub1'>
     <pubsub xmlns='http://jabber.org/protocol/pubsub'>
         <unsubscribe node='%NODEID%'/>

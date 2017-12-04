@@ -42,6 +42,10 @@ class OVS():
         h.cmd('ifconfig {} {} up'.format(link.intf1, ip))
         sw.attach(link.intf2)
 
+    def deleteHost(self, identifier, network):
+        self.ovs.delHost()
+        pass
+
     def addTunnelIntf(self, network, next_hop, label, dst_ip):
         sw = self.nw_sw[network]
 
@@ -71,3 +75,5 @@ class OVS():
     def remove_routing_flow(self, ip_address, next_hop, network):
         sw = self.nw_sw[network]
         sw.cmd('ovs-ofctl del-flows {} "ip,nw_dst={}"'.format(sw.name, ip_address))
+
+

@@ -104,6 +104,7 @@ class VRouterMock():
     def detach_vee(self, vee):
         item_id = vee.ip_address + ":1:" + self.ip_address
         self.remove_entry_from_routing_table(vee.ip_address, 'localhost')
+        self.ovs.deleteHost(vee.identifier, vee.network)
         self.xmpp_agent.retract(item_id, vee.network)
         vee.attached = False
         if not self.is_already_subscribed(vee.network):
@@ -189,7 +190,7 @@ if __name__ == '__main__':
                             4.Delete VM
                             5.Shutdown vRouter
                             6.Dump routing table
-                            """)
+                            """.format(jid))
         option = raw_input("Choose action from list above..\n")
 
         if option == "1":
