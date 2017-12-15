@@ -30,7 +30,7 @@ class Vee():
 class VRouterMock():
 
     def __init__(self, client_jid, ip_address, controller_ip):
-        self.xmpp_agent = XmppClient(client_jid=client_jid, server_jid='bgp.contrail.com', password='passwd')
+        self.xmpp_agent = XmppClient(client_jid=client_jid, server_jid='xmpp.onosproject.org', password='passwd')
         self.xmpp_agent.add_callback(self.notification_event)
         self.xmpp_agent.connect((controller_ip, 5269), use_tls=False, reattempt=False)
         self.xmpp_agent.process(block=False)
