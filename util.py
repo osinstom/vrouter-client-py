@@ -1,6 +1,7 @@
 class PubInfo():
-    def __init__(self, item_id, nlri, label, next_hop, encapsulations):
+    def __init__(self, item_id, mac_address, nlri, label, next_hop, encapsulations):
         self.item_id = item_id
+        self.mac_address = mac_address
         self.nlri = nlri
         self.next_hop = next_hop
         self.label = label

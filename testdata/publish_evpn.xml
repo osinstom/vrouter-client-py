@@ -1,0 +1,26 @@
+<iq type='set'
+    from='%FROMJID%'
+    to='xmpp.onosproject.org'
+    id='request1'>
+  <pubsub xmlns='http://jabber.org/protocol/pubsub'>
+    <publish node='%NODEID%'>
+      <item id="%ITEMID%">
+        <entry xmlns='http://ietf.org/protocol/bgpvpn'>
+          <nlri>
+            <af>25</af>
+            <safi>242</safi>
+            <mac>%MAC%</mac>
+            <address>%IPADDRESS%</address>
+          </nlri>
+          <next-hops>
+          <next-hop>
+            <af>1</af>
+            <address>%NEXTHOP%</address>
+            <label>%LABEL%</label>
+          </next-hop>
+          </next-hops>
+        </entry>
+      </item>
+    </publish>
+  </pubsub>
+</iq>

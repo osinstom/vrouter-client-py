@@ -13,6 +13,8 @@ TO_JID_PATTERN = "%TOJID%"
 NODE_PATTERN = "%NODEID%"
 ITEMID_PATTERN = "%ITEMID%"
 NLRI_PATTERN = "%NLRI%"
+MACADDR_PATTERN = "%MAC%"
+IPADDR_PATTERN = "%IPADDRESS%"
 NEXTHOP_PATTERN = "%NEXTHOP%"
 LABEL_PATTERN = "%LABEL%"
 ENCAPS_PATTERN = "%ENCAPS%"
@@ -76,6 +78,11 @@ class XmppClient(ClientXMPP, Observable):
         bgp_info = self.prepare_publish(bgp_info, publish_info, publish_to)
         self.send_xmpp(bgp_info)
 
+    def publish_evpn(self, node, publish_info):
+        info = open('testdata/publish_evpn.xml', 'r').read()
+        evpn_info = self.prepare_evpn_publish(info, publish_info, node)
+        self.send_xmpp(evpn_info)
+
     def message(self, msg):
         logger.info("XMPP Message received!")
         payload = msg.get_payload()
@@ -138,3 +145,12 @@ class XmppClient(ClientXMPP, Observable):
         retract_packet = str(retract_packet).replace(ITEMID_PATTERN, item_id)
         retract_packet = str(retract_packet).replace(NODE_PATTERN, node_id)
         self.send_xmpp(retract_packet)
+
+    def prepare_evpn_publish(self, packet, publish_info, node):
+        packet = str(packet).replace(NODE_PATTERN, node)
+        packet = str(packet).replace(ITEMID_PATTERN, publish_info.item_id)
+        packet = str(packet).replace(IPADDR_PATTERN, publish_info.nlri)
+        packet = str(packet).replace(NEXTHOP_PATTERN, publish_info.next_hop)
+        packet = str(packet).replace(LABEL_PATTERN, publish_info.label)
+        packet = str(packet).replace(MACADDR_PATTERN, publish_info.mac_address)
+        return packet

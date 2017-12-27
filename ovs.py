@@ -41,6 +41,7 @@ class OVS():
         link = self.ovs.addLink(h, sw)
         h.cmd('ifconfig {} {} up'.format(link.intf1, ip))
         sw.attach(link.intf2)
+        return h.MAC(h.intfs[0])
 
     def deleteHost(self, identifier, network):
         self.ovs.delHost()

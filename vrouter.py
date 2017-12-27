@@ -22,6 +22,10 @@ class Vee():
         self.network = network
         self.ip_address = ip_addr
         self.attached = False
+        self.mac_address = ""
+
+    def set_mac(self, mac_address):
+        self.mac_address = mac_address
 
     def info(self):
         print "ID={}, ATTACHED={}, NETWORK={}".format(self.identifier, self.attached, self.network)
@@ -39,15 +43,15 @@ class VRouterMock():
         self.vee_list = []
         self.routing_table = []
         self.networks = ['blue', 'red']
-        self.network_labels = {'blue' : '10', 'red' : '20'}
+        self.network_labels = {'blue' : '20', 'red' : '10'}
         self.ovs = OVS(self.networks)
 
 
     def notification_event(self, info):
         if info.item_id:
-            parts = info.item_id.split(':')
-            nlri = parts[0]
-            next_hop = parts[2]
+            parts = info.item_id.split('/')
+            nlri = parts[2]
+            next_hop = parts[0]
             self.remove_entry_from_routing_table(nlri=nlri, next_hop=next_hop, network=info.node_id)
         else:
             entry = [info.nlri, info.next_hop, info.label]
@@ -78,8 +82,10 @@ class VRouterMock():
         if self.validate_create_params(identifier, network, ip_addr):
             logger.info("Creating new Virtual Execution Environment..")
             vee = Vee(identifier=identifier, network=network, ip_addr=ip_addr)
-            self.attach_vee(vee)
+            mac_address = self.attach_vee(vee)
+            vee.set_mac(mac_address)
             self.vee_list.append(vee)
+            self.sendBgpUpdate(vee)
 
     def validate_create_params(self, identifier, network, ip_addr):
         if network in self.networks:
@@ -92,23 +98,24 @@ class VRouterMock():
 
     def attach_vee(self, vee):
         self.wait_for_session_started()
-        self.ovs.addHost(vee.identifier, vee.ip_address, vee.network)
+        mac_address = self.ovs.addHost(vee.identifier, vee.ip_address, vee.network)
+        print "MAC Addr: " + mac_address
         if not self.is_already_subscribed(vee.network):
             self.xmpp_agent.initial_subscribe(vee.network)
-        pub_info = self.get_publish_info(vee)
-        time.sleep(1)
-        self.routing_table.append([vee.ip_address, 'localhost', pub_info.label])
-        self.xmpp_agent.publish(vee.network, pub_info)
         vee.attached = True
+        return mac_address
 
     def detach_vee(self, vee):
-        item_id = vee.ip_address + ":1:" + self.ip_address
-        self.remove_entry_from_routing_table(vee.ip_address, 'localhost')
-        self.ovs.deleteHost(vee.identifier, vee.network)
+        item_id = self.generate_item_id(self.ip_address, vee.network, vee.ip_address, vee.mac_address)
+        self.remove_entry_from_routing_table(vee.ip_address, 'localhost', vee.network)
+        # self.ovs.deleteHost(vee.identifier, vee.network)
         self.xmpp_agent.retract(item_id, vee.network)
         vee.attached = False
         if not self.is_already_subscribed(vee.network):
             self.xmpp_agent.unsubscribe(vee.network)
+
+    def generate_item_id(self, next_hop, network, nlri, mac):
+        return "{}/{}/{}/{}".format(next_hop, network, nlri, mac)
 
     def list_vee(self):
         logger.info("Currently associated VEEs:\n")
@@ -147,8 +154,8 @@ class VRouterMock():
     def get_publish_info(self, vee):
         nlri = vee.ip_address
         label = self.network_labels[vee.network]
-        item_id = nlri + ":1:" + self.ip_address
-        publish_info = PubInfo(item_id, nlri, str(label), self.ip_address, self.encapsulations)
+        item_id = self.generate_item_id(self.ip_address, vee.network, vee.ip_address, vee.mac_address)
+        publish_info = PubInfo(item_id, vee.mac_address, nlri, str(label), self.ip_address, self.encapsulations)
         return publish_info
 
     def is_already_subscribed(self, network):
@@ -157,7 +164,12 @@ class VRouterMock():
                 return True
         return False
 
-
+    def sendBgpUpdate(self, vee):
+        pub_info = self.get_publish_info(vee)
+        time.sleep(1)
+        self.routing_table.append([vee.ip_address, 'localhost', pub_info.label])
+        # self.xmpp_agent.publish(vee.network, pub_info)
+        self.xmpp_agent.publish_evpn(vee.network, pub_info)
 
 
 if __name__ == '__main__':
