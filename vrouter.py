@@ -38,8 +38,8 @@ class VRouterMock():
         self.encapsulations = ['gre', 'udp']
         self.vee_list = []
         self.routing_table = []
-        self.networks = ['blue', 'red']
-        self.network_labels = {'blue' : '10', 'red' : '20'}
+        self.networks = ['net0', 'net1']
+        self.network_labels = {'net0' : '10', 'net1' : '20'}
         self.ovs = OVS(self.networks)
 
 
@@ -103,7 +103,7 @@ class VRouterMock():
 
     def detach_vee(self, vee):
         item_id = vee.ip_address + ":1:" + self.ip_address
-        self.remove_entry_from_routing_table(vee.ip_address, 'localhost')
+        self.remove_entry_from_routing_table(vee.ip_address, 'localhost', vee.network)
         self.ovs.deleteHost(vee.identifier, vee.network)
         self.xmpp_agent.retract(item_id, vee.network)
         vee.attached = False
