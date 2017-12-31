@@ -57,6 +57,7 @@ class VRouterMock():
             entry = [info.nlri, info.next_hop, info.label]
             self.routing_table.append(entry)
             self.ovs.addTunnelIntf(info.network, info.next_hop, info.label, info.nlri)
+            self.ovs.install_arp_flow(info.network, info.nlri, info.mac)
 
     def remove_entry_from_routing_table(self, nlri, next_hop, network):
         for entry in self.routing_table:

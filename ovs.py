@@ -16,6 +16,7 @@ class OVS():
     def __init__(self, networks):
         self.nw_sw = {}
         self.ovs = self.start(networks)
+
         print "OVS initialized"
 
     def start(self, networks):
@@ -30,7 +31,7 @@ class OVS():
 
         for switch in self.nw_sw.values():
             switch.cmd('ovs-ofctl add-flow {} arp,actions=flood'.format(switch.name))
-            switch.cmd('ovs-ofctl add-flow {} ip,actions=flood'.format(switch.name))
+            # switch.cmd('ovs-ofctl add-flow {} ip,actions=flood'.format(switch.name))
 
         return net
 
@@ -76,5 +77,10 @@ class OVS():
     def remove_routing_flow(self, ip_address, next_hop, network):
         sw = self.nw_sw[network]
         sw.cmd('ovs-ofctl del-flows {} "ip,nw_dst={}"'.format(sw.name, ip_address))
+
+    def install_arp_flow(self, network, nlri, mac):
+
+
+        pass
 
 

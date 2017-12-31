@@ -10,5 +10,5 @@ logging.basicConfig(level=logging.DEBUG,
 
 vrouter1 = VRouterMock("agent3@xmpp.org", "127.0.0.1", "127.0.0.1")
 vrouter1.wait_for_session_started()
-vrouter1.xmpp_agent.initial_subscribe("blue")
+vrouter1.xmpp_agent.initial_subscribe("net0")
 time.sleep(3)

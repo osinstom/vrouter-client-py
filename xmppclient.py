@@ -89,7 +89,7 @@ class XmppClient(ClientXMPP, Observable):
         xml = payload[0]
 
         node = xml.find('./items').attrib['node']
-        item = xml.find('.//items/item')
+        item = xml.find('.//items/item/entry')
 
         if item:
             self.handle_event_notification(item, node)
@@ -98,8 +98,9 @@ class XmppClient(ClientXMPP, Observable):
 
     def handle_event_notification(self, item, node):
         elements = list(item.iter())
-
+        print elements
         for el in elements:
+            print el
             if 'nlri' in str(el.tag):
                 nlri = el.text
             if 'next-hop' in str(el.tag):
