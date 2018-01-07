@@ -30,7 +30,6 @@ class OVS():
 
         for switch in self.nw_sw.values():
             switch.cmd('ovs-ofctl add-flow {} arp,actions=flood'.format(switch.name))
-            switch.cmd('ovs-ofctl add-flow {} ip,actions=flood'.format(switch.name))
 
         return net
 
@@ -39,8 +38,13 @@ class OVS():
 
         sw = self.nw_sw[network]
         link = self.ovs.addLink(h, sw)
+
         h.cmd('ifconfig {} {} up'.format(link.intf1, ip))
         sw.attach(link.intf2)
+        sw.cmd(
+            'sudo ovs-ofctl add-flow {} ip,nw_dst={},actions=output:{}'.format(sw.name, ip, link.intf2.params['port'])
+        )
+        sw.cmdPrint('ovs-vsctl show')
 
     def deleteHost(self, identifier, network):
         self.ovs.delHost()
