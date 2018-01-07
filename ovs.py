@@ -37,14 +37,16 @@ class OVS():
         h = self.ovs.addHost(name)
 
         sw = self.nw_sw[network]
+
         link = self.ovs.addLink(h, sw)
 
         h.cmd('ifconfig {} {} up'.format(link.intf1, ip))
         sw.attach(link.intf2)
+
         sw.cmd(
-            'sudo ovs-ofctl add-flow {} ip,nw_dst={},actions=output:{}'.format(sw.name, ip, link.intf2.params['port'])
+            'sudo ovs-ofctl add-flow {} ip,nw_dst={},actions=output:{}'.format(sw.name, ip, sw.ports[link.intf2])
         )
-        sw.cmdPrint('ovs-vsctl show')
+
 
     def deleteHost(self, identifier, network):
         self.ovs.delHost()

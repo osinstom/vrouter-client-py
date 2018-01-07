@@ -104,7 +104,7 @@ class VRouterMock():
     def detach_vee(self, vee):
         item_id = vee.ip_address + ":1:" + self.ip_address
         self.remove_entry_from_routing_table(vee.ip_address, 'localhost', vee.network)
-        self.ovs.deleteHost(vee.identifier, vee.network)
+        #self.ovs.deleteHost(vee.identifier, vee.network)
         self.xmpp_agent.retract(item_id, vee.network)
         vee.attached = False
         if not self.is_already_subscribed(vee.network):
