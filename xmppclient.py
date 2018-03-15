@@ -88,27 +88,25 @@ class XmppClient(ClientXMPP, Observable):
         payload = msg.get_payload()
         xml = payload[0]
 
-        node = xml.find('./items').attrib['node']
-        item = xml.find('.//items/item/entry')
+        item = xml.find('./items/item')
 
         if item:
+            node = xml.find('./items').attrib['node']
             self.handle_event_notification(item, node)
         else:
             self.handle_retract_notification(xml)
 
     def handle_event_notification(self, item, node):
-        elements = list(item.iter())
-        print elements
-        for el in elements:
-            print el
-            if 'nlri' in str(el.tag):
-                nlri = el.text
-            if 'next-hop' in str(el.tag):
-                next_hop = el.text
-            if 'label' in str(el.tag):
-                label = el.text
 
-        self.fire(item_id=None, nlri=nlri, next_hop=next_hop, label=label, encapsulations=[], network=node)
+        for el in item.iter('nlri'):
+            nlri = el.find('address').text
+            mac = el.find('mac').text
+        for el in item.iter('next-hop'):
+            next_hop = el.find('address').text
+            label = el.find('label').text
+
+        print "Firing {}, {}, {}, {}. {}".format(nlri, next_hop, label, node, mac)
+        self.fire(item_id=None, nlri=nlri, mac=mac, next_hop=next_hop, label=label, encapsulations=[], network=node)
 
     def handle_retract_notification(self, xml):
         items = xml.find('.//items')

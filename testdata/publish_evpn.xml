@@ -7,8 +7,8 @@
       <item id="%ITEMID%">
         <entry xmlns='http://ietf.org/protocol/bgpvpn'>
           <nlri>
-            <af>25</af>
-            <safi>242</safi>
+            <af>5</af>
+            <safi>70</safi>
             <mac>%MAC%</mac>
             <address>%IPADDRESS%</address>
           </nlri>

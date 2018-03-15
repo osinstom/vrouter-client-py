@@ -34,6 +34,7 @@ class Vee():
 class VRouterMock():
 
     def __init__(self, client_jid, ip_address, controller_ip):
+        self.jid = client_jid
         self.xmpp_agent = XmppClient(client_jid=client_jid, server_jid='xmpp.onosproject.org', password='passwd')
         self.xmpp_agent.add_callback(self.notification_event)
         self.xmpp_agent.connect((controller_ip, 5269), use_tls=False, reattempt=False)
@@ -43,7 +44,7 @@ class VRouterMock():
         self.vee_list = []
         self.routing_table = []
         self.networks = ['blue', 'red']
-        self.network_labels = {'blue' : '20', 'red' : '10'}
+        self.network_labels = {'blue' : '1', 'red' : '2'}
         self.ovs = OVS(self.networks)
 
 
@@ -107,7 +108,7 @@ class VRouterMock():
         return mac_address
 
     def detach_vee(self, vee):
-        item_id = self.generate_item_id(self.ip_address, vee.network, vee.ip_address, vee.mac_address)
+        item_id = self.generate_item_id(self.ip_address, self.jid, vee.ip_address, vee.mac_address, self.network_labels[vee.network])
         self.remove_entry_from_routing_table(vee.ip_address, 'localhost', vee.network)
         # self.ovs.deleteHost(vee.identifier, vee.network)
         self.xmpp_agent.retract(item_id, vee.network)
@@ -115,8 +116,8 @@ class VRouterMock():
         if not self.is_already_subscribed(vee.network):
             self.xmpp_agent.unsubscribe(vee.network)
 
-    def generate_item_id(self, next_hop, network, nlri, mac):
-        return "{}/{}/{}/{}".format(next_hop, network, nlri, mac)
+    def generate_item_id(self, next_hop, identifier, nlri, mac, label):
+        return "{}/{}/{}/{}/{}".format(next_hop, identifier, nlri, mac, label)
 
     def list_vee(self):
         logger.info("Currently associated VEEs:\n")
@@ -155,7 +156,7 @@ class VRouterMock():
     def get_publish_info(self, vee):
         nlri = vee.ip_address
         label = self.network_labels[vee.network]
-        item_id = self.generate_item_id(self.ip_address, vee.network, vee.ip_address, vee.mac_address)
+        item_id = self.generate_item_id(self.ip_address, self.jid, vee.ip_address, vee.mac_address, self.network_labels[vee.network])
         publish_info = PubInfo(item_id, vee.mac_address, nlri, str(label), self.ip_address, self.encapsulations)
         return publish_info
 
