@@ -42,9 +42,7 @@ class OVS():
         link = self.net.addLink(h, sw)
         h.cmd('ifconfig {} {} up'.format(link.intf1, ip))
         sw.attach(link.intf2)
-        logger.info(str(link.intf2))
-        logger.info(str(link.intf2.params))
-        sw.cmd('ovs-ofctl add-flow {} ip,nw_dst={},actions=output:{}'.format(sw.name,ip,link.intf2.port))
+        sw.cmd('ovs-ofctl add-flow {} ip,nw_dst={},actions=output:{}'.format(sw.name,ip,sw.ports[link.intf2]))
         return h.MAC(h.intfs[0])
 
     def deleteHost(self, identifier, network):
