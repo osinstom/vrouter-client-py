@@ -88,7 +88,7 @@ class VRouterMock():
             vee.set_mac(mac_address)
             self.vee_list.append(vee)
             self.sendBgpUpdate(vee)
-            self.add_internal_flow(vee.ip_address)
+            self.ovs.add_internal_flow(vee.ip_address)
 
     def validate_create_params(self, identifier, network, ip_addr):
         if network in self.networks:
