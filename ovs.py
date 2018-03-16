@@ -15,7 +15,7 @@ class OVS():
 
     def __init__(self, networks):
         self.nw_sw = {}
-        self.ovs = self.start(networks)
+        self.net = self.start(networks)
 
         print "OVS initialized"
 
@@ -31,21 +31,21 @@ class OVS():
 
         for switch in self.nw_sw.values():
             switch.cmd('ovs-ofctl add-flow {} arp,actions=flood'.format(switch.name))
-            # switch.cmd('ovs-ofctl add-flow {} ip,actions=flood'.format(switch.name))
+            # switch.cmd('ovs-ofctl add-flow {} ip,nw_dst={},actions=flood'.format(switch.name))
 
         return net
 
     def addHost(self, name, ip, network):
-        h = self.ovs.addHost(name)
+        h = self.net.addHost(name)
 
         sw = self.nw_sw[network]
-        link = self.ovs.addLink(h, sw)
+        link = self.net.addLink(h, sw)
         h.cmd('ifconfig {} {} up'.format(link.intf1, ip))
         sw.attach(link.intf2)
         return h.MAC(h.intfs[0])
 
     def deleteHost(self, identifier, network):
-        self.ovs.delHost()
+        self.net.delHost()
         pass
 
     def addTunnelIntf(self, network, next_hop, label, dst_ip):
@@ -69,14 +69,20 @@ class OVS():
         sw.cmdPrint('ovs-vsctl show')
 
     def stop(self):
-        self.ovs.stop()
+        self.net.stop()
 
     def cli(self):
-        CLI(self.ovs)
+        CLI(self.net)
 
     def remove_routing_flow(self, ip_address, next_hop, network):
         sw = self.nw_sw[network]
         sw.cmd('ovs-ofctl del-flows {} "ip,nw_dst={}"'.format(sw.name, ip_address))
+
+    def add_internal_flow(self, ip_address):
+        logger.info("Adding internal flow")
+        logger.info(str(self.net.hosts))
+        logger.info(str(self.net.hosts[0].intf))
+
 
     def install_arp_flow(self, network, nlri, mac):
 
