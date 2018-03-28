@@ -61,8 +61,10 @@ class VRouterMock():
             self.ovs.install_arp_flow(info.network, info.nlri, info.mac)
 
     def remove_entry_from_routing_table(self, nlri, next_hop, network):
+        entry_to_remove = ''
         for entry in self.routing_table:
-            if entry[0] == nlri and entry[1] == next_hop:
+            print entry
+            if nlri in entry and next_hop in entry:
                 entry_to_remove = entry
 
         self.routing_table.remove(entry_to_remove)
