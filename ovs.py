@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import logging
+import os
 from mininet.net import Mininet
 from mininet.node import Controller, RemoteController
 from mininet.cli import CLI
@@ -71,6 +72,7 @@ class OVS():
 
     def stop(self):
         self.net.stop()
+        os.system('sudo mn -c')
 
     def cli(self):
         CLI(self.net)
