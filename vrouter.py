@@ -3,6 +3,7 @@ import time
 import logging
 import argparse, sys, os
 import ConfigParser
+import socket
 
 from ovs import OVS
 from util import PubInfo
@@ -66,7 +67,7 @@ class VRouterMock():
             print entry
             if nlri in entry and next_hop in entry:
                 entry_to_remove = entry
-                
+
         if not entry_to_remove is None:
             self.routing_table.remove(entry_to_remove)
 
@@ -93,9 +94,20 @@ class VRouterMock():
             self.sendBgpUpdate(vee)
 
     def validate_create_params(self, identifier, network, ip_addr):
+        return self.validate_network(network) and self.validate_ip_addr(ip_addr)
+
+    def validate_network(self, network):
         if network in self.networks:
             return True
         return False
+
+    def validate_ip_addr(self, ip_addr):
+        try:
+            socket.inet_aton(ip_addr)
+            logger.info("IP Address valid")
+            return True
+        except socket.error:
+            return False
 
     def wait_for_session_started(self):
         while not self.xmpp_session_started():
@@ -175,6 +187,7 @@ class VRouterMock():
         self.routing_table.append([vee.ip_address, 'localhost', pub_info.label])
         # self.xmpp_agent.publish(vee.network, pub_info)
         self.xmpp_agent.publish_evpn(vee.network, pub_info)
+
 
 
 if __name__ == '__main__':
